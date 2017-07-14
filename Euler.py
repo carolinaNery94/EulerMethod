@@ -1,9 +1,9 @@
 import numpy as np
 
-def solucaoExata(r, t=100):
+def solucaoExata(r, t):
     No = 4 * pow(10, 9)  # População inicial N0
-    x = np.zeros(100)  # inicializa um array com tamanho de n
-    y = np.zeros(100)
+    x = np.zeros(t)  # inicializa um array com tamanho de n
+    y = np.zeros(t)
 
     # f = open("exata.csv", "w")
     for i in range(0, t):  # percorre o for de 0 até 101
@@ -52,17 +52,16 @@ def eulerExplicito(r, h, t=100):
 
     # f.close()
 
-def getErrorEulerExplicito(r, h, t=50):
-    e = eulerExplicito(r, h, 50)
+def getErrorEulerExplicito(r, h, t):
+    e = eulerExplicito(r, h, t)
 
-    error = np.abs(e - solucaoExata(r, t))
-    print(error)
+    error = np.abs(solucaoExata(r, t) - e)
     return error
 
-def getErrorEulerImplicito(r, h, t=100):
+def getErrorEulerImplicito(r, h, t):
     e = eulerImplicito(r, h, t)
 
-    error = np.abs(e - solucaoExata(r, t))
+    error = np.abs(solucaoExata(r, t) - e)
     return error
 
 def getDadosExplicito():
@@ -72,15 +71,37 @@ def getDadosExplicito():
     logh = np.zeros(4)
     erroh = np.zeros(4)
 
+    x = 0
+    y = 0
     for i in range(0, len(hs)):
-        e = getErrorEulerExplicito(0.01, hs[i], 50)
+        e = getErrorEulerExplicito(0.01, hs[i], 500)
         f.writelines(str(np.log(hs[i])) + "," + str(np.log(e)) + "\n")
         logh[i] = np.log(hs[i])
         erroh[i] = np.log(e)
+
+        x += logh[i]
+        y += erroh[i]
+
+    # mínimos quadrados
+    x = x / 4.0
+    y = y / 4.0
+    print("x e y explicito: ", x, y)
+
+    som = 0
+    somax = 0
+    for i in range(0, 4):
+        som += (logh[i]*erroh[i])
+        somax += pow(logh[i], 2)
+
+    som = som - 4*(x*y)
+    somax = somax - 4*pow(x, 2)
+    a = som / somax
+    b = y - a*x
+
+    print("resultado a e b explicito:", a, b)
+
     f.close()
-    A = np.vstack([logh, np.ones(len(logh))]).T
-    m, c = np.linalg.lstsq(A, erroh)[0]
-    print(m, c)
+
 
 
 def getDadosImplicito():
@@ -90,16 +111,34 @@ def getDadosImplicito():
     logh = np.zeros(4)
     erroh = np.zeros(4)
 
+    x = 0
+    y = 0
     for i in range(0, len(hs)):
-        e = getErrorEulerImplicito(0.01, hs[i], 50)
+        e = getErrorEulerImplicito(0.01, hs[i], 500)
         f.writelines(str(np.log(hs[i])) + "," + str(np.log(e)) + "\n")
         logh[i] = np.log(hs[i])
         erroh[i] = np.log(e)
-    f.close()
-    A = np.vstack([logh, np.ones(len(logh))]).T
-#   T faza transposta
-    m, c = np.linalg.lstsq(A, erroh)[0]
-    print(m, c)
+
+        x += logh[i]
+        y += erroh[i]
+        print(logh[i], erroh[i])
+
+    # mínimos quadrados
+    x = x / 4.0
+    y = y / 4.0
+    print("x e y: ", x, y)
+    som = 0
+    somax = 0
+    for i in range(0, 4):
+        som += (logh[i]*erroh[i])
+        somax += pow(logh[i], 2)
+
+    som = som - 4*(x*y)
+    somax = somax - 4*pow(x, 2)
+    a = som / somax
+    b = y - a*x
+
+    print("resultado a e b implicito:", a, b)
 
 
 getDadosExplicito()
